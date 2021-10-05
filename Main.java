@@ -1,36 +1,47 @@
 public class Main {
+	public static volatile Object lock = new Object();
+	public static volatile int produtos = 0;
+	
 	public static void main(String[] args) {
+		Produtor p1 = new Produtor(1);
 		
-		MinhaThread mT1 = new MinhaThread(1, 10);
-		MinhaThread mT2 = new MinhaThread(2, 10);
-		MinhaThread mT3 = new MinhaThread(3, 10);
-
-		mT1.start();
-		mT2.start();
-		mT3.start();
-
-		mT1.setPriority(Thread.MIN_PRIORITY);
-		mT2.setPriority(Thread.MIN_PRIORITY);
-		mT3.setPriority(Thread.MAX_PRIORITY);
+		p1.start();
+		Consumidor c1 = new Consumidor(1);
 		
-		for(int i = 0; i < Integer.MAX_VALUE; i++) {
-			int a = i + 1;
-		}
-		System.out.println("\nMain");
+
+		c1.start();
 	}
 }
-class MinhaThread extends Thread {
-	public volatile int counter = 0;   
-	int id = 0, limite = 0;
-	MinhaThread(int novoId, int novoLimite) {
+class Produtor extends Thread {
+	int id = 0;
+	Produtor(int novoId) {
 		this.id = novoId;
-		this.limite = novoLimite;
 	}
 	public void run() {
-		for(int i = 0; i < limite; i++) {
-			counter++;
-			System.out.println(counter);
+					
+			synchronized( Main.lock )
+			{	
+				for(int i = 0; i < 100; i ++ ) {
+				if(Main.produtos < 100)
+					Main.produtos = Main.produtos + 1;
+				System.out.println("\nProdutor " + id + "; estoque = " + Main.produtos);
+				}
+			}
+	}
+}
+class Consumidor extends Thread {
+	int id = 0;
+	Consumidor(int novoId) {
+		this.id = novoId;
+	}
+	public void run() {
+		for(int i = 0; i < 100; i++) {			
+			synchronized( Main.lock )
+			{	
+				System.out.println("\nConsumidor " + id + "; estoque = " + Main.produtos);
+				if(Main.produtos > 0)
+					Main.produtos = Main.produtos - 1;
+			}
 		}
-		System.out.println("\nTerminou thread " + id);
 	}
 }
